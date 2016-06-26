@@ -1,6 +1,6 @@
 var mongoose = require('mongoose');
 var assert = require('assert');
-var Dishes = require('./models/dish');
+var Dishes = require('./models/dishes');
 
 var url = 'mongodb://localhost:27017/conFusion';
 
