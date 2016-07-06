@@ -36,7 +36,7 @@ dishRouter.route('/')
         });
 })
 
-.post(Verify.verifyOrdinaryUser, function(req, res, next){
+.post(Verify.verifyOrdinaryUser, Verify.verifyAdmin, function(req, res, next){
     //res.end('Will add the dish: ' + req.body.name + ' with details: ' + req.body.description);
     Dishes.create(req.body, function(err, dish){
       if (err) throw err;
@@ -50,7 +50,7 @@ dishRouter.route('/')
     });
 })
 
-.delete(Verify.verifyOrdinaryUser, function(req, res, next){
+.delete(Verify.verifyOrdinaryUser, Verify.verifyAdmin, function(req, res, next){
       //  res.end('Deleting all dishes');
       Dishes.remove({}, function(err, resp){
         if (err) throw err;
