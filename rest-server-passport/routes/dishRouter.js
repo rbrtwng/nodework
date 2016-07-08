@@ -28,7 +28,10 @@ dishRouter.route('/')
 
 .get(Verify.verifyOrdinaryUser, function(req,res,next){
         //res.end('Will send all the dishes to you!');
-        Dishes.find({}, function(err, dish){
+        //Dishes.find({}, function(err, dish){
+        Dishes.find({})
+          .populate('comments.postedBy')
+          .exec(function (err, dish){
           if (err){
             throw err;
           }
@@ -62,7 +65,9 @@ dishRouter.route('/:id')
 
 .get(function(req,res,next){
         //res.end('Will send details of the dish: ' + req.params.id +' to you!');
-        Dishes.findById(req.params.id, function(err, dish){
+        Dishes.findById(req.params.id)
+          .populate('comments.postedBy')
+          .exec(function(err, dish){
           if (err) throw err;
           res.json(dish);
         });
@@ -93,8 +98,11 @@ dishRouter.route('/:id')
 
 dishRouter.route('/:id/comments')
 
+.all(Verify.verifyOrdinaryUser)
 .get(function(req, res, next){
-  Dishes.findById(req.params.id, function(err, dish){
+  Dishes.findById(req.params.id)
+  .populate('comments.postedBy')
+  .exec(function(err, dish){
     if (err) throw err;
     res.json(dish.comments);
   });
@@ -103,6 +111,7 @@ dishRouter.route('/:id/comments')
 .post(function(req, res, next){
   Dishes.findById(req.params.id, function(err, dish){
     if (err) throw err;
+    req.body.postedBy = req.decoded._doc._id;
     dish.comments.push(req.body);
     dish.save(function(err, dish){
       if (err) throw err;
@@ -113,7 +122,7 @@ dishRouter.route('/:id/comments')
   });
 })
 
-.delete(function(req, res, next){
+.delete(Verify.verifyAdmin, function(req, res, next){
   Dishes.findById(req.params.id, function(err, dish){
     if (err) throw err;
     for(var i = (dish.comments.length -1); i>=0; i--){
@@ -135,6 +144,7 @@ dishRouter.route('/:id/comments')
 
 dishRouter.route('/:id/comments/:commentId')
 
+.all(Verify.verifyOrdinaryUser)
 .get(function(req, res, next){
   Dishes.findById(req.params.id, function(err, dish){
     if (err) throw err;
@@ -147,6 +157,8 @@ dishRouter.route('/:id/comments/:commentId')
     if (err) throw err;
     //dish.comments.push(req.body);
     dish.comments.id(req.params.commentId).remove();
+
+    req.body.postedBy = req.decoded._doc._id;
     dish.comments.push(req.body);
     dish.save(function(err, dish){
       if (err) throw err;
@@ -159,7 +171,12 @@ dishRouter.route('/:id/comments/:commentId')
 
 .delete(function(req, res, next){
   Dishes.findById(req.params.id, function(err, dish){
-    if (err) throw err;
+  //  if (err) throw err;
+  if (dish.comments.id(req.params.commentId).postedBy != req.decoded._doc._id){
+    var err = new Error('You are not authorized to perform this operation!');
+    err.status = 403;
+    return next(err);
+  }
     dish.comments.id(req.params.commentId).remove();
     //dish.comments.push(req.body);
     dish.save(function(err, dish){
