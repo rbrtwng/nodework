@@ -67,9 +67,9 @@ favoriteRouter.route('/')
 })
 
 .delete(Verify.verifyOrdinaryUser, function(req, res, next){
-      Favorites.remove({postedBy: req.decoded._doc._id}, function(err, resp){
+      Favorites.findOneAndRemove({postedBy: req.decoded._doc._id}, function(err, favorite){
         if (err) throw err;
-        res.json(resp);
+        res.json(favorite);
       });
 });
 
